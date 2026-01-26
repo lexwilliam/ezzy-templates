@@ -7,11 +7,11 @@
       "files": [
         {
           "path": "components/ezzy-template.tsx",
-          "content": "templates/ezzy-template/component.tsx"
+          "content": "component.tsx"
         },
         {
           "path": "components/ezzy-template.css",
-          "content": "templates/ezzy-template/styles.css",
+          "content": "styles.css",
           "optional": true
         }
       ],
