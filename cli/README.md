@@ -7,7 +7,7 @@ CLI tool to add internal blog components to your project, similar to shadcn/ui.
 The CLI is designed to be run via npx (no installation needed):
 
 ```bash
-npx internal-blog@latest add ezzy-template
+npx ezzy-templates@latest add blog
 ```
 
 ## Usage
@@ -15,13 +15,13 @@ npx internal-blog@latest add ezzy-template
 ### Add a template
 
 ```bash
-npx internal-blog@latest add <template-name>
+npx ezzy-templates@latest add <template-name>
 ```
 
 Example:
 
 ```bash
-npx internal-blog@latest add ezzy-template
+npx ezzy-templates@latest add blog
 ```
 
 The CLI will:
@@ -36,7 +36,7 @@ The CLI will:
 
 ## Available Templates
 
-- `ezzy-template` - A React component to display blogs from internal
+- `blog` - A React component to display blogs from internal
 
 ## Development
 
@@ -45,7 +45,7 @@ To develop the CLI locally:
 ```bash
 cd cli
 npm install
-npm run dev add ezzy-template
+npm run dev add blog
 ```
 
 To build:

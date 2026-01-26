@@ -1,10 +1,10 @@
 {
-  "name": "internal-blog",
+  "name": "ezzy-templates",
   "version": "1.0.0",
   "description": "CLI tool to add internal blog components to your project",
   "type": "module",
   "bin": {
-    "internal-blog": "./dist/index.js"
+    "ezzy-templates": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "scripts": {
@@ -13,7 +13,7 @@
     "prepublishOnly": "npm run build"
   },
   "keywords": [
-    "internal-blog",
+    "ezzy-templates",
     "blog",
     "cli",
     "template"

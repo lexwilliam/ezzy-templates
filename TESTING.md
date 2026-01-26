@@ -34,7 +34,7 @@ This tests the CLI using local templates (fallback mode when GitHub fetch fails)
    ```bash
    # From the test project directory
    cd /Users/alex/Documents/EzzyApp/ezzy-projects/ezzy-templates/cli
-   npm run dev add ezzy-template
+   npm run dev add blog
    ```
 
    The CLI will:
@@ -69,7 +69,7 @@ If you've already created a GitHub repository:
    ```bash
    # From a test project
    cd /path/to/test-project
-   node /Users/alex/Documents/EzzyApp/ezzy-projects/ezzy-templates/cli/dist/index.js add ezzy-template
+   node /Users/alex/Documents/EzzyApp/ezzy-projects/ezzy-templates/cli/dist/index.js add blog
    ```
 
 4. **Or publish to npm and test:**
@@ -78,7 +78,7 @@ If you've already created a GitHub repository:
    npm publish
    
    # Then from any project:
-   npx internal-blog@latest add ezzy-template
+   npx ezzy-templates@latest add blog
    ```
 
 ### Method 3: Quick Local Test (No GitHub)
@@ -102,7 +102,7 @@ Test the local fallback without setting up GitHub:
 3. **Run CLI (will use local templates):**
    ```bash
    cd /Users/alex/Documents/EzzyApp/ezzy-projects/ezzy-templates/cli
-   npm run dev add ezzy-template
+   npm run dev add blog
    ```
 
 ## What to Check
@@ -160,4 +160,4 @@ Test the local fallback without setting up GitHub:
 2. **If GitHub testing works:**
    - Build CLI: `npm run build`
    - Publish to npm: `npm publish`
-   - Test with `npx internal-blog@latest add ezzy-template`
+   - Test with `npx ezzy-templates@latest add blog`

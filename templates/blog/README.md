@@ -4,10 +4,10 @@ A React component template for displaying blogs from internal.
 
 ## Installation
 
-This template is installed via the `internal-blog` CLI tool:
+This template is installed via the `ezzy-templates` CLI tool:
 
 ```bash
-npx internal-blog@latest add ezzy-template
+npx ezzy-templates@latest add blog
 ```
 
 ## Usage

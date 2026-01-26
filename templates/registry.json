@@ -1,16 +1,16 @@
 {
   "templates": {
-    "ezzy-template": {
+    "blog": {
       "name": "Blog Page",
       "description": "A React component to display blogs from internal",
       "version": "1.0.0",
       "files": [
         {
-          "path": "components/ezzy-template.tsx",
+          "path": "components/blog.tsx",
           "content": "component.tsx"
         },
         {
-          "path": "components/ezzy-template.css",
+          "path": "components/blog.css",
           "content": "styles.css",
           "optional": true
         }

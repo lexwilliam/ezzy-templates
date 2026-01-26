@@ -63,45 +63,47 @@ export async function addCommand(templateName: string) {
 
     spinner.succeed("Component check complete");
 
-    // Prompt user about existing components
+    // Automatically use existing components (no prompt needed)
     if (existingComponents.length > 0) {
       console.log("\n" + chalk.green("✓") + ` Found existing components: ${existingComponents.join(", ")}`);
-      
-      const componentAnswers = await inquirer.prompt(
-        existingComponents.map((component) => ({
-          type: "confirm",
-          name: `use_${component}`,
-          message: `Use existing ${component} component?`,
-          default: true,
-        }))
-      );
-
-      // Add components user declined to missing list
-      for (const component of existingComponents) {
-        const key = `use_${component}` as keyof typeof componentAnswers;
-        if (!componentAnswers[key]) {
-          missingComponents.push(component);
-        }
-      }
+      console.log(chalk.gray("  Using existing components from your project"));
     }
 
-    // Install missing shadcn components
+    // Prompt user to install missing shadcn components
     if (missingComponents.length > 0) {
+      console.log("\n" + chalk.yellow("⚠") + ` Missing components: ${missingComponents.join(", ")}`);
+      
       if (!hasShadcn) {
-        spinner.warn("shadcn not configured. Skipping component installation.");
+        spinner.warn("shadcn not configured. Cannot install components automatically.");
         console.log(chalk.yellow("  Tip: Run 'npx shadcn@latest init' to set up shadcn UI"));
+        console.log(chalk.yellow("  Or install components manually:"));
+        console.log(chalk.yellow(`  npx shadcn@latest add ${missingComponents.join(" ")}`));
       } else {
-        spinner.start(`Installing missing components: ${missingComponents.join(", ")}`);
-        
-        for (const component of missingComponents) {
-          try {
-            await installShadcnComponent(component, cwd);
-          } catch (error) {
-            spinner.warn(`Failed to install ${component}: ${error instanceof Error ? error.message : "Unknown error"}`);
+        const { installMissing } = await inquirer.prompt([
+          {
+            type: "confirm",
+            name: "installMissing",
+            message: `Would you like to install missing components from shadcn?`,
+            default: true,
+          },
+        ]);
+
+        if (installMissing) {
+          spinner.start(`Installing components from shadcn: ${missingComponents.join(", ")}`);
+          
+          for (const component of missingComponents) {
+            try {
+              await installShadcnComponent(component, cwd);
+            } catch (error) {
+              spinner.warn(`Failed to install ${component}: ${error instanceof Error ? error.message : "Unknown error"}`);
+            }
           }
+          
+          spinner.succeed("Components installed from shadcn");
+        } else {
+          console.log(chalk.yellow("  Skipping component installation. You may need to install them manually."));
+          console.log(chalk.yellow(`  Run: npx shadcn@latest add ${missingComponents.join(" ")}`));
         }
-        
-        spinner.succeed("Components installed");
       }
     }
 
@@ -148,7 +150,7 @@ export async function addCommand(templateName: string) {
 
     spinner.succeed("Template downloaded");
 
-    // Prompt for installation options
+    // Prompt for installation path only
     const answers = await inquirer.prompt([
       {
         type: "input",
@@ -162,36 +164,12 @@ export async function addCommand(templateName: string) {
           return true;
         },
       },
-      {
-        type: "input",
-        name: "apiBaseUrl",
-        message: "What is your internal API base URL?",
-        default: process.env.EZZY_API_BASE_URL || "",
-        validate: (input: string) => {
-          if (!input.trim()) {
-            return "API base URL is required";
-          }
-          try {
-            new URL(input);
-            return true;
-          } catch {
-            return "Please enter a valid URL";
-          }
-        },
-      },
-      {
-        type: "input",
-        name: "apiKey",
-        message: "What is your API key? (optional, can be set via env var)",
-        default: process.env.EZZY_API_KEY || "",
-      },
     ]);
 
-    // Install template
+    // Install template with default base URL
     spinner.start("Installing template...");
     await installTemplate(template, answers.installPath, {
-      apiBaseUrl: answers.apiBaseUrl,
-      apiKey: answers.apiKey,
+      apiBaseUrl: "ezzy.lexwilliam.dev",
     });
 
     spinner.succeed("Template installed successfully!");
@@ -200,14 +178,18 @@ export async function addCommand(templateName: string) {
     console.log("\n" + chalk.green("✓") + " Template installed!");
     console.log("\nNext steps:");
     console.log(`  1. Import and use the component in your project`);
-    console.log(`  2. Set environment variables if needed:`);
-    if (answers.apiKey) {
-      console.log(`     EZZY_API_KEY=${answers.apiKey}`);
-    }
-    console.log(`     EZZY_API_BASE_URL=${answers.apiBaseUrl}`);
+    console.log(`  2. Pass the baseUrl and apiKey as props when using the component`);
     console.log(`\nExample usage:`);
-    console.log(`  import { BlogPage } from "@/components/ezzy-template";`);
-    console.log(`  <BlogPage blogId="your-blog-id" />`);
+    // Get the component filename from the template files
+    const componentFile = template.files.find(f => f.path.endsWith('.tsx') || f.path.endsWith('.ts'));
+    const componentName = componentFile 
+      ? path.basename(componentFile.path, path.extname(componentFile.path))
+      : "blog";
+    const importPath = answers.installPath.startsWith('/') || answers.installPath.startsWith('./')
+      ? answers.installPath
+      : `@/${answers.installPath}`;
+    console.log(`  import { BlogPage } from "${importPath}/${componentName}";`);
+    console.log(`  <BlogPage blogId="your-blog-id" baseUrl="your-api-base-url" apiKey="your-api-key" />`);
   } catch (error) {
     spinner.fail("Failed to add template");
     console.error(chalk.red("\nError:"), error instanceof Error ? error.message : error);
