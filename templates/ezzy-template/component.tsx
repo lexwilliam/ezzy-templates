@@ -50,8 +50,8 @@ interface BlogPageState {
  * A React component that fetches and displays a blog post from the internal API.
  *
  * @param blogId - The ID of the blog to display
- * @param apiKey - API key for authentication (can also be set via INTERNAL_BLOG_API_KEY env var)
- * @param apiBaseUrl - Base URL for the API (can also be set via INTERNAL_BLOG_API_BASE_URL env var)
+ * @param apiKey - API key for authentication (can also be set via EZZY_API_KEY env var)
+ * @param apiBaseUrl - Base URL for the API (can also be set via EZZY_API_BASE_URL env var)
  *
  * @example
  * ```tsx
@@ -78,12 +78,12 @@ export function BlogPage({
     propApiKey ||
     (typeof window !== "undefined"
       ? undefined
-      : process.env.INTERNAL_BLOG_API_KEY);
+      : process.env.EZZY_API_KEY);
   const apiBaseUrl =
     propApiBaseUrl ||
     (typeof window !== "undefined"
       ? undefined
-      : process.env.INTERNAL_BLOG_API_BASE_URL) ||
+      : process.env.EZZY_API_BASE_URL) ||
     "";
 
   // Initialize TipTap editor for rendering content

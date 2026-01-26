@@ -29,15 +29,15 @@ export default function Page() {
 ## Props
 
 - `blogId` (string, required): The ID of the blog to display
-- `apiKey` (string, optional): API key for authentication. Can also be set via `INTERNAL_BLOG_API_KEY` environment variable
-- `apiBaseUrl` (string, optional): Base URL for the API. Can also be set via `INTERNAL_BLOG_API_BASE_URL` environment variable
+- `apiKey` (string, optional): API key for authentication. Can also be set via `EZZY_API_KEY` environment variable
+- `apiBaseUrl` (string, optional): Base URL for the API. Can also be set via `EZZY_API_BASE_URL` environment variable
 
 ## Environment Variables
 
 You can set these environment variables instead of passing props:
 
-- `INTERNAL_BLOG_API_KEY`: Your API key
-- `INTERNAL_BLOG_API_BASE_URL`: Base URL of your internal instance (e.g., `https://your-app.com`)
+- `EZZY_API_KEY`: Your API key
+- `EZZY_API_BASE_URL`: Base URL of your internal instance (e.g., `https://your-app.com`)
 
 ## Features
 

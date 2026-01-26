@@ -40,8 +40,8 @@ export async function installTemplate(
     // Replace API base URL placeholder if present
     if (options.apiBaseUrl) {
       content = content.replace(
-        /process\.env\.INTERNAL_BLOG_API_BASE_URL\s*\|\|\s*["']/g,
-        `process.env.INTERNAL_BLOG_API_BASE_URL || "${options.apiBaseUrl}"`
+        /process\.env\.EZZY_API_BASE_URL\s*\|\|\s*["']/g,
+        `process.env.EZZY_API_BASE_URL || "${options.apiBaseUrl}"`
       );
     }
 
@@ -66,17 +66,17 @@ export async function installTemplate(
     let hasApiBaseUrl = false;
 
     for (const line of lines) {
-      if (line.startsWith("INTERNAL_BLOG_API_KEY=")) {
+      if (line.startsWith("EZZY_API_KEY=")) {
         if (options.apiKey) {
-          newLines.push(`INTERNAL_BLOG_API_KEY=${options.apiKey}`);
+          newLines.push(`EZZY_API_KEY=${options.apiKey}`);
           hasApiKey = true;
         } else {
           newLines.push(line);
           hasApiKey = true;
         }
-      } else if (line.startsWith("INTERNAL_BLOG_API_BASE_URL=")) {
+      } else if (line.startsWith("EZZY_API_BASE_URL=")) {
         if (options.apiBaseUrl) {
-          newLines.push(`INTERNAL_BLOG_API_BASE_URL=${options.apiBaseUrl}`);
+          newLines.push(`EZZY_API_BASE_URL=${options.apiBaseUrl}`);
           hasApiBaseUrl = true;
         } else {
           newLines.push(line);
@@ -88,11 +88,11 @@ export async function installTemplate(
     }
 
     if (options.apiKey && !hasApiKey) {
-      newLines.push(`INTERNAL_BLOG_API_KEY=${options.apiKey}`);
+      newLines.push(`EZZY_API_KEY=${options.apiKey}`);
     }
 
     if (options.apiBaseUrl && !hasApiBaseUrl) {
-      newLines.push(`INTERNAL_BLOG_API_BASE_URL=${options.apiBaseUrl}`);
+      newLines.push(`EZZY_API_BASE_URL=${options.apiBaseUrl}`);
     }
 
     await fs.writeFile(envPath, newLines.join("\n") + "\n", "utf-8");

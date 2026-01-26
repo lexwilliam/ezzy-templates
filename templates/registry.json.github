@@ -19,12 +19,12 @@
       "devDependencies": [],
       "envVars": [
         {
-          "name": "INTERNAL_BLOG_API_KEY",
+          "name": "EZZY_API_KEY",
           "description": "Your internal API key",
           "required": false
         },
         {
-          "name": "INTERNAL_BLOG_API_BASE_URL",
+          "name": "EZZY_API_BASE_URL",
           "description": "Base URL of your internal instance",
           "required": false
         }

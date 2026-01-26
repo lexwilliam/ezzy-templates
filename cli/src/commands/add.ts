@@ -166,7 +166,7 @@ export async function addCommand(templateName: string) {
         type: "input",
         name: "apiBaseUrl",
         message: "What is your internal API base URL?",
-        default: process.env.INTERNAL_BLOG_API_BASE_URL || "",
+        default: process.env.EZZY_API_BASE_URL || "",
         validate: (input: string) => {
           if (!input.trim()) {
             return "API base URL is required";
@@ -183,7 +183,7 @@ export async function addCommand(templateName: string) {
         type: "input",
         name: "apiKey",
         message: "What is your API key? (optional, can be set via env var)",
-        default: process.env.INTERNAL_BLOG_API_KEY || "",
+        default: process.env.EZZY_API_KEY || "",
       },
     ]);
 
@@ -202,9 +202,9 @@ export async function addCommand(templateName: string) {
     console.log(`  1. Import and use the component in your project`);
     console.log(`  2. Set environment variables if needed:`);
     if (answers.apiKey) {
-      console.log(`     INTERNAL_BLOG_API_KEY=${answers.apiKey}`);
+      console.log(`     EZZY_API_KEY=${answers.apiKey}`);
     }
-    console.log(`     INTERNAL_BLOG_API_BASE_URL=${answers.apiBaseUrl}`);
+    console.log(`     EZZY_API_BASE_URL=${answers.apiBaseUrl}`);
     console.log(`\nExample usage:`);
     console.log(`  import { BlogPage } from "@/components/ezzy-template";`);
     console.log(`  <BlogPage blogId="your-blog-id" />`);
