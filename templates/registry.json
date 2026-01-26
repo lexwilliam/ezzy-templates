@@ -1,0 +1,34 @@
+{
+  "templates": {
+    "ezzy-template": {
+      "name": "Blog Page",
+      "description": "A React component to display blogs from internal",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "components/ezzy-template.tsx",
+          "content": "templates/ezzy-template/component.tsx"
+        },
+        {
+          "path": "components/ezzy-template.css",
+          "content": "templates/ezzy-template/styles.css",
+          "optional": true
+        }
+      ],
+      "dependencies": [],
+      "devDependencies": [],
+      "envVars": [
+        {
+          "name": "INTERNAL_BLOG_API_KEY",
+          "description": "Your internal API key",
+          "required": false
+        },
+        {
+          "name": "INTERNAL_BLOG_API_BASE_URL",
+          "description": "Base URL of your internal instance",
+          "required": false
+        }
+      ]
+    }
+  }
+}
