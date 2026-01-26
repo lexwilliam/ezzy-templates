@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 import chalk from "chalk";
 import ora from "ora";
 import { downloadTemplate } from "../utils/download.js";
-import { installTemplate } from "../utils/install.js";
+import { installTemplate, createBlogDetailPage } from "../utils/install.js";
 import { detectProjectType } from "../utils/config.js";
 import {
   checkShadcnConfigured,
@@ -150,7 +150,7 @@ export async function addCommand(templateName: string) {
 
     spinner.succeed("Template downloaded");
 
-    // Prompt for installation path only
+    // Prompt for installation path and blog detail page creation
     const answers = await inquirer.prompt([
       {
         type: "input",
@@ -164,6 +164,16 @@ export async function addCommand(templateName: string) {
           return true;
         },
       },
+      ...(projectType === "nextjs"
+        ? [
+            {
+              type: "confirm",
+              name: "createBlogPage",
+              message: "Would you like to create a /blog/[id] page?",
+              default: true,
+            },
+          ]
+        : []),
     ]);
 
     // Install template with default base URL
@@ -174,22 +184,65 @@ export async function addCommand(templateName: string) {
 
     spinner.succeed("Template installed successfully!");
 
+    // Create blog detail page if requested
+    if (projectType === "nextjs" && answers.createBlogPage) {
+      spinner.start("Creating blog detail page...");
+      try {
+        // Get the component filename from the template files
+        const componentFile = template.files.find(f => f.path.endsWith('.tsx') || f.path.endsWith('.ts'));
+        const componentFileName = componentFile 
+          ? path.basename(componentFile.path, path.extname(componentFile.path))
+          : "blog";
+        
+        // Default export name is EzzyBlogPage (as seen in the blog component)
+        const exportName = "EzzyBlogPage";
+        
+        await createBlogDetailPage(
+          answers.installPath,
+          componentFileName,
+          exportName,
+          {
+            apiBaseUrl: "ezzy.lexwilliam.dev",
+          }
+        );
+        spinner.succeed("Blog detail page created at /blog/[id]");
+      } catch (error) {
+        spinner.warn(
+          `Failed to create blog detail page: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`
+        );
+        console.log(
+          chalk.yellow(
+            "  You can create it manually by adding a page at app/blog/[id]/page.tsx or pages/blog/[id]/index.tsx"
+          )
+        );
+      }
+    }
+
     // Show next steps
     console.log("\n" + chalk.green("✓") + " Template installed!");
     console.log("\nNext steps:");
-    console.log(`  1. Import and use the component in your project`);
-    console.log(`  2. Pass the baseUrl and apiKey as props when using the component`);
-    console.log(`\nExample usage:`);
-    // Get the component filename from the template files
-    const componentFile = template.files.find(f => f.path.endsWith('.tsx') || f.path.endsWith('.ts'));
-    const componentName = componentFile 
-      ? path.basename(componentFile.path, path.extname(componentFile.path))
-      : "blog";
-    const importPath = answers.installPath.startsWith('/') || answers.installPath.startsWith('./')
-      ? answers.installPath
-      : `@/${answers.installPath}`;
-    console.log(`  import { BlogPage } from "${importPath}/${componentName}";`);
-    console.log(`  <BlogPage blogId="your-blog-id" baseUrl="your-api-base-url" apiKey="your-api-key" />`);
+    
+    if (projectType === "nextjs" && answers.createBlogPage) {
+      console.log(`  1. The blog detail page has been created at /blog/[id]`);
+      console.log(`  2. You can now navigate to /blog/your-blog-id to view a blog post`);
+      console.log(`  3. Make sure to set EZZY_API_KEY in your .env.local file if you haven't already`);
+    } else {
+      console.log(`  1. Import and use the component in your project`);
+      console.log(`  2. Pass the baseUrl and apiKey as props when using the component`);
+      console.log(`\nExample usage:`);
+      // Get the component filename from the template files
+      const componentFile = template.files.find(f => f.path.endsWith('.tsx') || f.path.endsWith('.ts'));
+      const componentName = componentFile 
+        ? path.basename(componentFile.path, path.extname(componentFile.path))
+        : "blog";
+      const importPath = answers.installPath.startsWith('/') || answers.installPath.startsWith('./')
+        ? answers.installPath
+        : `@/${answers.installPath}`;
+      console.log(`  import { EzzyBlogPage } from "${importPath}/${componentName}";`);
+      console.log(`  <EzzyBlogPage blogId="your-blog-id" apiBaseUrl="your-api-base-url" apiKey="your-api-key" />`);
+    }
   } catch (error) {
     spinner.fail("Failed to add template");
     console.error(chalk.red("\nError:"), error instanceof Error ? error.message : error);

@@ -1,5 +1,6 @@
 import fs from "fs-extra";
 import path from "path";
+import { detectNextjsRouterType } from "./config.js";
 
 interface Template {
   name: string;
@@ -97,4 +98,89 @@ export async function installTemplate(
 
     await fs.writeFile(envPath, newLines.join("\n") + "\n", "utf-8");
   }
+}
+
+/**
+ * Create a blog detail page at /blog/[id]
+ */
+export async function createBlogDetailPage(
+  componentPath: string,
+  componentName: string = "blog",
+  exportName: string = "EzzyBlogPage",
+  options: InstallOptions = {}
+): Promise<void> {
+  const cwd = process.cwd();
+  const routerType = await detectNextjsRouterType();
+  
+  if (!routerType) {
+    throw new Error("Could not detect Next.js router type. Make sure you're in a Next.js project.");
+  }
+  
+  // Determine the import path for the component
+  const importPath = componentPath.startsWith('/') || componentPath.startsWith('./')
+    ? `${componentPath}/${componentName}`
+    : `@/${componentPath}/${componentName}`;
+  
+  // Get API configuration
+  const apiBaseUrl = options.apiBaseUrl || "ezzy.lexwilliam.dev";
+  const apiKey = options.apiKey || "";
+  
+  // Create the page content based on router type
+  let pageContent: string;
+  if (routerType === "app") {
+    // App Router: uses params prop
+    pageContent = `import { ${exportName} } from "${importPath}";
+
+export default function BlogPage(
+  { params }: { params: { id: string } }
+) {
+  return (
+    <${exportName} 
+      blogId={params.id} 
+      apiBaseUrl="${apiBaseUrl}"${apiKey ? `\n      apiKey="${apiKey}"` : ""} 
+    />
+  );
+}
+`;
+  } else {
+    // Pages Router: uses useRouter hook
+    pageContent = `"use client";
+
+import { useRouter } from "next/router";
+import { ${exportName} } from "${importPath}";
+
+export default function BlogPage() {
+  const router = useRouter();
+  const { id } = router.query;
+  
+  if (!id || typeof id !== "string") {
+    return <div>Loading...</div>;
+  }
+  
+  return (
+    <${exportName} 
+      blogId={id} 
+      apiBaseUrl="${apiBaseUrl}"${apiKey ? `\n      apiKey="${apiKey}"` : ""} 
+    />
+  );
+}
+`;
+  }
+  
+  // Determine the target directory and file path based on router type
+  let pageFilePath: string;
+  if (routerType === "app") {
+    // App Router: app/blog/[id]/page.tsx
+    const targetDir = path.join(cwd, "app", "blog", "[id]");
+    await fs.ensureDir(targetDir);
+    pageFilePath = path.join(targetDir, "page.tsx");
+  } else {
+    // Pages Router: pages/blog/[id].tsx
+    const targetDir = path.join(cwd, "pages", "blog");
+    await fs.ensureDir(targetDir);
+    pageFilePath = path.join(targetDir, "[id].tsx");
+  }
+  
+  // Write the page file
+  await fs.writeFile(pageFilePath, pageContent, "utf-8");
 }

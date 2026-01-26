@@ -2,6 +2,7 @@ import fs from "fs-extra";
 import path from "path";
 
 type ProjectType = "nextjs" | "react" | "vite" | "unknown";
+type NextjsRouterType = "app" | "pages" | null;
 
 /**
  * Detect project type by checking for configuration files
@@ -33,5 +34,24 @@ export async function detectProjectType(): Promise<ProjectType | null> {
     }
   }
 
+  return null;
+}
+
+/**
+ * Detect Next.js router type (app router vs pages router)
+ */
+export async function detectNextjsRouterType(): Promise<NextjsRouterType> {
+  const cwd = process.cwd();
+  
+  // Check for app directory (App Router)
+  if (await fs.pathExists(path.join(cwd, "app"))) {
+    return "app";
+  }
+  
+  // Check for pages directory (Pages Router)
+  if (await fs.pathExists(path.join(cwd, "pages"))) {
+    return "pages";
+  }
+  
   return null;
 }
