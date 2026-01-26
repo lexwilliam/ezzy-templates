@@ -91,6 +91,7 @@ export function BlogPage({
     extensions: [StarterKit],
     content: state.blog?.content || null,
     editable: false,
+    immediatelyRender: false,
   });
 
   // Update editor content when blog loads
