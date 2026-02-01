@@ -128,15 +128,18 @@ export async function createBlogDetailPage(
   // Create the page content based on router type
   let pageContent: string;
   if (routerType === "app") {
-    // App Router: uses params prop
+    // App Router: uses params prop (async in Next.js 15+)
     pageContent = `import { ${exportName} } from "${importPath}";
 
-export default function BlogPage(
-  { params }: { params: { id: string } }
-) {
+export default async function BlogPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
   return (
     <${exportName} 
-      blogId={params.id} 
+      blogId={id} 
       apiBaseUrl="${apiBaseUrl}"${apiKey ? `\n      apiKey="${apiKey}"` : ""} 
     />
   );
@@ -179,6 +182,79 @@ export default function BlogPage() {
     const targetDir = path.join(cwd, "pages", "blog");
     await fs.ensureDir(targetDir);
     pageFilePath = path.join(targetDir, "[id].tsx");
+  }
+  
+  // Write the page file
+  await fs.writeFile(pageFilePath, pageContent, "utf-8");
+}
+
+/**
+ * Create a blog list page at /blog
+ */
+export async function createBlogListPage(
+  componentPath: string,
+  componentName: string = "blog",
+  exportName: string = "EzzyBlogList",
+  options: InstallOptions = {}
+): Promise<void> {
+  const cwd = process.cwd();
+  const routerType = await detectNextjsRouterType();
+  
+  if (!routerType) {
+    throw new Error("Could not detect Next.js router type. Make sure you're in a Next.js project.");
+  }
+  
+  // Determine the import path for the component
+  const importPath = componentPath.startsWith('/') || componentPath.startsWith('./')
+    ? `${componentPath}/${componentName}`
+    : `@/${componentPath}/${componentName}`;
+  
+  // Get API configuration
+  const apiBaseUrl = options.apiBaseUrl || "ezzy.lexwilliam.dev";
+  const apiKey = options.apiKey || "";
+  
+  // Create the page content based on router type
+  let pageContent: string;
+  if (routerType === "app") {
+    // App Router: server component
+    pageContent = `import { ${exportName} } from "${importPath}";
+
+export default function BlogListPage() {
+  return (
+    <${exportName} 
+      apiBaseUrl="${apiBaseUrl}"${apiKey ? `\n      apiKey="${apiKey}"` : ""} 
+    />
+  );
+}
+`;
+  } else {
+    // Pages Router: client component
+    pageContent = `"use client";
+
+import { ${exportName} } from "${importPath}";
+
+export default function BlogListPage() {
+  return (
+    <${exportName} 
+      apiBaseUrl="${apiBaseUrl}"${apiKey ? `\n      apiKey="${apiKey}"` : ""} 
+    />
+  );
+}
+`;
+  }
+  
+  // Determine the target directory and file path based on router type
+  let pageFilePath: string;
+  if (routerType === "app") {
+    // App Router: app/blog/page.tsx
+    const targetDir = path.join(cwd, "app", "blog");
+    await fs.ensureDir(targetDir);
+    pageFilePath = path.join(targetDir, "page.tsx");
+  } else {
+    // Pages Router: pages/blog/index.tsx
+    const targetDir = path.join(cwd, "pages", "blog");
+    await fs.ensureDir(targetDir);
+    pageFilePath = path.join(targetDir, "index.tsx");
   }
   
   // Write the page file

@@ -15,7 +15,9 @@
           "optional": true
         }
       ],
-      "dependencies": [],
+      "dependencies": [
+        "date-fns"
+      ],
       "devDependencies": [],
       "envVars": [
         {

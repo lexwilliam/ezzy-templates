@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 import chalk from "chalk";
 import ora from "ora";
 import { downloadTemplate } from "../utils/download.js";
-import { installTemplate, createBlogDetailPage } from "../utils/install.js";
+import { installTemplate, createBlogDetailPage, createBlogListPage } from "../utils/install.js";
 import { detectProjectType } from "../utils/config.js";
 import {
   checkShadcnConfigured,
@@ -107,36 +107,37 @@ export async function addCommand(templateName: string) {
       }
     }
 
-    // Check and install tiptap packages
-    spinner.start("Checking TipTap packages...");
-    const tiptapPackages = [
+    // Check and install required packages
+    spinner.start("Checking required packages...");
+    const requiredPackages = [
       "@tiptap/react",
       "@tiptap/starter-kit",
       "@tiptap/core",
+      "date-fns",
     ];
 
-    const missingTiptapPackages: string[] = [];
-    for (const pkg of tiptapPackages) {
+    const missingPackages: string[] = [];
+    for (const pkg of requiredPackages) {
       const installed = await checkPackageInstalled(pkg, cwd);
       if (!installed) {
-        missingTiptapPackages.push(pkg);
+        missingPackages.push(pkg);
       }
     }
 
-    if (missingTiptapPackages.length > 0) {
-      spinner.warn(`Missing TipTap packages: ${missingTiptapPackages.join(", ")}`);
-      spinner.start("Installing TipTap packages...");
+    if (missingPackages.length > 0) {
+      spinner.warn(`Missing packages: ${missingPackages.join(", ")}`);
+      spinner.start("Installing packages...");
       
       try {
-        await installPackages(missingTiptapPackages, cwd);
-        spinner.succeed("TipTap packages installed");
+        await installPackages(missingPackages, cwd);
+        spinner.succeed("Packages installed");
       } catch (error) {
-        spinner.fail(`Failed to install TipTap packages: ${error instanceof Error ? error.message : "Unknown error"}`);
+        spinner.fail(`Failed to install packages: ${error instanceof Error ? error.message : "Unknown error"}`);
         console.log(chalk.yellow("  You may need to install them manually:"));
-        console.log(chalk.yellow(`  npm install ${missingTiptapPackages.join(" ")}`));
+        console.log(chalk.yellow(`  npm install ${missingPackages.join(" ")}`));
       }
     } else {
-      spinner.succeed("TipTap packages already installed");
+      spinner.succeed("Required packages already installed");
     }
 
     // Download template from GitHub
@@ -150,8 +151,8 @@ export async function addCommand(templateName: string) {
 
     spinner.succeed("Template downloaded");
 
-    // Prompt for installation path and blog detail page creation
-    const answers = await inquirer.prompt([
+    // Prompt for installation path and blog pages creation
+    const questions: any[] = [
       {
         type: "input",
         name: "installPath",
@@ -164,17 +165,18 @@ export async function addCommand(templateName: string) {
           return true;
         },
       },
-      ...(projectType === "nextjs"
-        ? [
-            {
-              type: "confirm",
-              name: "createBlogPage",
-              message: "Would you like to create a /blog/[id] page?",
-              default: true,
-            },
-          ]
-        : []),
-    ]);
+    ];
+
+    if (projectType === "nextjs") {
+      questions.push({
+        type: "confirm",
+        name: "createBlogPages",
+        message: "Would you like to create blog pages (/blog and /blog/[id])?",
+        default: true,
+      });
+    }
+
+    const answers = await inquirer.prompt(questions);
 
     // Install template with default base URL
     spinner.start("Installing template...");
@@ -184,23 +186,46 @@ export async function addCommand(templateName: string) {
 
     spinner.succeed("Template installed successfully!");
 
-    // Create blog detail page if requested
-    if (projectType === "nextjs" && answers.createBlogPage) {
+    // Create blog pages if requested
+    if (projectType === "nextjs" && answers.createBlogPages) {
+      // Get the component filename from the template files
+      const componentFile = template.files.find(f => f.path.endsWith('.tsx') || f.path.endsWith('.ts'));
+      const componentFileName = componentFile 
+        ? path.basename(componentFile.path, path.extname(componentFile.path))
+        : "blog";
+      
+      // Create blog list page
+      spinner.start("Creating blog list page...");
+      try {
+        await createBlogListPage(
+          answers.installPath,
+          componentFileName,
+          "EzzyBlogList",
+          {
+            apiBaseUrl: "ezzy.lexwilliam.dev",
+          }
+        );
+        spinner.succeed("Blog list page created at /blog");
+      } catch (error) {
+        spinner.warn(
+          `Failed to create blog list page: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`
+        );
+        console.log(
+          chalk.yellow(
+            "  You can create it manually by adding a page at app/blog/page.tsx or pages/blog/index.tsx"
+          )
+        );
+      }
+
+      // Create blog detail page
       spinner.start("Creating blog detail page...");
       try {
-        // Get the component filename from the template files
-        const componentFile = template.files.find(f => f.path.endsWith('.tsx') || f.path.endsWith('.ts'));
-        const componentFileName = componentFile 
-          ? path.basename(componentFile.path, path.extname(componentFile.path))
-          : "blog";
-        
-        // Default export name is EzzyBlogPage (as seen in the blog component)
-        const exportName = "EzzyBlogPage";
-        
         await createBlogDetailPage(
           answers.installPath,
           componentFileName,
-          exportName,
+          "EzzyBlogPage",
           {
             apiBaseUrl: "ezzy.lexwilliam.dev",
           }
@@ -224,10 +249,12 @@ export async function addCommand(templateName: string) {
     console.log("\n" + chalk.green("✓") + " Template installed!");
     console.log("\nNext steps:");
     
-    if (projectType === "nextjs" && answers.createBlogPage) {
-      console.log(`  1. The blog detail page has been created at /blog/[id]`);
-      console.log(`  2. You can now navigate to /blog/your-blog-id to view a blog post`);
-      console.log(`  3. Make sure to set EZZY_API_KEY in your .env.local file if you haven't already`);
+    if (projectType === "nextjs" && answers.createBlogPages) {
+      console.log(`  1. The blog list page has been created at /blog`);
+      console.log(`  2. The blog detail page has been created at /blog/[id]`);
+      console.log(`  3. You can now navigate to /blog to see all blogs and /blog/your-blog-id to view a specific post`);
+      console.log(`  4. Make sure to set EZZY_API_KEY in your .env.local file if you haven't already`);
+      console.log(`  5. Note: The /api/v1/blogs endpoint should support listing all blogs (without blogId parameter)`);
     } else {
       console.log(`  1. Import and use the component in your project`);
       console.log(`  2. Pass the baseUrl and apiKey as props when using the component`);
@@ -240,7 +267,8 @@ export async function addCommand(templateName: string) {
       const importPath = answers.installPath.startsWith('/') || answers.installPath.startsWith('./')
         ? answers.installPath
         : `@/${answers.installPath}`;
-      console.log(`  import { EzzyBlogPage } from "${importPath}/${componentName}";`);
+      console.log(`  import { EzzyBlogList, EzzyBlogPage } from "${importPath}/${componentName}";`);
+      console.log(`  <EzzyBlogList apiBaseUrl="your-api-base-url" apiKey="your-api-key" />`);
       console.log(`  <EzzyBlogPage blogId="your-blog-id" apiBaseUrl="your-api-base-url" apiKey="your-api-key" />`);
     }
   } catch (error) {
