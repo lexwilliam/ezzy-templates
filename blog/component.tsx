@@ -10,6 +10,7 @@ interface Blog {
   _id: string;
   title: string;
   content: any; // TipTap JSON content
+  contentMdx?: string; // Markdown/MDX source for SEO and server-side rendering
   status: "draft" | "published";
   thumbnail?: string;
   excerpt?: string;
@@ -58,13 +59,15 @@ function CoverImage({
   slug?: string;
 }) {
   const image = (
-    <img
-      src={src}
-      alt={`Cover Image for ${title}`}
-      className={`shadow-sm w-full ${
-        slug ? "hover:shadow-lg transition-shadow duration-200" : ""
-      }`}
-    />
+    <div className="w-full aspect-[21/9] overflow-hidden rounded-lg bg-muted">
+      <img
+        src={src}
+        alt={`Cover Image for ${title}`}
+        className={`w-full h-full object-cover object-center shadow-sm ${
+          slug ? "hover:shadow-lg transition-shadow duration-200" : ""
+        }`}
+      />
+    </div>
   );
 
   return (
@@ -124,16 +127,15 @@ export function BlogList({
   });
 
   // Get API key and base URL from props or environment variables
+  // Props take priority, then NEXT_PUBLIC_ env vars (for client), then regular env vars (for SSR)
   const apiKey =
     propApiKey ||
-    (typeof window !== "undefined"
-      ? undefined
-      : process.env.EZZY_API_KEY);
+    process.env.NEXT_PUBLIC_EZZY_API_KEY ||
+    process.env.EZZY_API_KEY;
   const apiBaseUrl =
     propApiBaseUrl ||
-    (typeof window !== "undefined"
-      ? undefined
-      : process.env.EZZY_API_BASE_URL) ||
+    process.env.NEXT_PUBLIC_EZZY_API_BASE_URL ||
+    process.env.EZZY_API_BASE_URL ||
     "";
 
   useEffect(() => {
@@ -344,16 +346,15 @@ export function BlogPage({
   });
 
   // Get API key and base URL from props or environment variables
+  // Props take priority, then NEXT_PUBLIC_ env vars (for client), then regular env vars (for SSR)
   const apiKey =
     propApiKey ||
-    (typeof window !== "undefined"
-      ? undefined
-      : process.env.EZZY_API_KEY);
+    process.env.NEXT_PUBLIC_EZZY_API_KEY ||
+    process.env.EZZY_API_KEY;
   const apiBaseUrl =
     propApiBaseUrl ||
-    (typeof window !== "undefined"
-      ? undefined
-      : process.env.EZZY_API_BASE_URL) ||
+    process.env.NEXT_PUBLIC_EZZY_API_BASE_URL ||
+    process.env.EZZY_API_BASE_URL ||
     "";
 
   // Initialize TipTap editor for rendering content
@@ -401,10 +402,9 @@ export function BlogPage({
           baseUrl = `https://${baseUrl}`;
         }
 
-        const url = new URL(`${baseUrl}/api/v1/blogs`);
-        url.searchParams.set("blogId", blogId);
+        const url = `${baseUrl}/api/v1/blogs/${blogId}`;
 
-        const response = await fetch(url.toString(), {
+        const response = await fetch(url, {
           method: "GET",
           headers: {
             "X-API-Key": apiKey,

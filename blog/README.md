@@ -29,15 +29,32 @@ export default function Page() {
 ## Props
 
 - `blogId` (string, required): The ID of the blog to display
-- `apiKey` (string, optional): API key for authentication. Can also be set via `EZZY_API_KEY` environment variable
-- `apiBaseUrl` (string, optional): Base URL for the API. Can also be set via `EZZY_API_BASE_URL` environment variable
+- `apiKey` (string, optional): API key for authentication. Can also be set via environment variable
+- `apiBaseUrl` (string, optional): Base URL for the API. Can also be set via environment variable
 
 ## Environment Variables
 
-You can set these environment variables instead of passing props:
+You can set these environment variables instead of passing props. Props always take priority over environment variables.
 
-- `EZZY_API_KEY`: Your API key
-- `EZZY_API_BASE_URL`: Base URL of your internal instance (e.g., `https://your-app.com`)
+### For Client-Side (Next.js)
+
+Use the `NEXT_PUBLIC_` prefix for variables that need to be available in the browser:
+
+- `NEXT_PUBLIC_EZZY_API_KEY`: Your API key
+- `NEXT_PUBLIC_EZZY_API_BASE_URL`: Base URL of your Ezzy instance (e.g., `https://your-app.com`)
+
+### For Server-Side Only
+
+If your component is rendered server-side, you can use:
+
+- `EZZY_API_KEY`: Your API key (not exposed to browser)
+- `EZZY_API_BASE_URL`: Base URL of your Ezzy instance
+
+### Priority Order
+
+1. Props (highest priority)
+2. `NEXT_PUBLIC_*` environment variables
+3. Non-prefixed environment variables (lowest priority)
 
 ## Features
 
@@ -81,13 +98,8 @@ The component includes basic styles. You can customize them by:
 
 ## API Endpoint
 
-The component makes a GET request to:
-
-```
-GET {apiBaseUrl}/api/v1/blogs?blogId={blogId}
-Headers:
-  X-API-Key: {apiKey}
-```
+- **EzzyBlogPage** (single post): `GET {apiBaseUrl}/api/v1/blogs?blogId={blogId}` with `X-API-Key` header.
+- **EzzyBlogList** (all posts): `GET {apiBaseUrl}/api/v1/blogs` (no `blogId`) with `X-API-Key` header; returns an array of blogs.
 
 ## Error Handling
 
